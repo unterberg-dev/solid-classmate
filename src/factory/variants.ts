@@ -1,3 +1,4 @@
+import { mergeProps } from "solid-js"
 import type { JSX } from "solid-js"
 import type {
   InputComponent,
@@ -40,8 +41,19 @@ const createVariantsComponent = <
       return ""
     }
 
+    type InterpolationProps = MergeProps<E, Partial<VariantProps> & ExtraProps> & { style: typeof styleUtility }
+    let interpolationProps: InterpolationProps | undefined
+    const getInterpolationProps = () => {
+      if (!interpolationProps) {
+        interpolationProps = mergeProps(props, { style: styleUtility }) as InterpolationProps
+      }
+      return interpolationProps
+    }
+
     // base classes and styles
-    const baseClasses = typeof base === "function" ? base({ ...props, style: styleUtility }) : base || ""
+    const interpolationTarget =
+      getInterpolationProps() as VariantProps & ExtraProps & { style: typeof styleUtility }
+    const baseClasses = typeof base === "function" ? base(interpolationTarget) : base || ""
 
     // variant classes and styles
     const variantClasses = Object.entries(variants).map(([key, variantOptions]) => {
@@ -49,7 +61,7 @@ const createVariantsComponent = <
       const variantClass = propValue ? (variantOptions as Record<string, any>)?.[propValue] : undefined
 
       if (typeof variantClass === "function") {
-        return variantClass({ ...props, style: styleUtility })
+        return variantClass(interpolationTarget)
       }
       return variantClass || ""
     })

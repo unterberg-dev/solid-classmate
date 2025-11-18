@@ -1,3 +1,4 @@
+import { mergeProps } from "solid-js"
 import type { JSX } from "solid-js"
 import type { Interpolation, LogicHandler, MergeProps, ScBaseComponent, StyleDefinition } from "../types"
 import createSolidElement from "../util/createSolidElement"
@@ -31,11 +32,20 @@ const createBaseComponent = <T extends object, E extends keyof JSX.IntrinsicElem
       return ""
     }
 
+    type InterpolationProps = MergeProps<E, T> & { style: typeof styleUtility }
+    let interpolationProps: InterpolationProps | undefined
+    const getInterpolationProps = () => {
+      if (!interpolationProps) {
+        interpolationProps = mergeProps(props, { style: styleUtility }) as InterpolationProps
+      }
+      return interpolationProps
+    }
+
     return strings
       .map((str, i) => {
         const interp = interpolations[i]
         if (typeof interp === "function") {
-          return str + interp({ ...props, style: styleUtility })
+          return str + interp(getInterpolationProps())
         }
         return str + (interp ?? "")
       })
