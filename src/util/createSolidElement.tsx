@@ -80,10 +80,21 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
     const computedClassName = computeClassName(normalizedProps)
 
     const filteredProps: Record<string, any> = {}
+    let shouldForwardChildren = false
     for (const key in normalizedProps) {
+      if (key === "children") {
+        shouldForwardChildren = true
+        continue
+      }
       if (!key.startsWith("$") && !propsToFilter.includes(key as unknown as keyof T)) {
         filteredProps[key] = normalizedProps[key]
       }
+    }
+    if (shouldForwardChildren) {
+      Object.defineProperty(filteredProps, "children", {
+        get: () => normalizedProps.children,
+        enumerable: true,
+      })
     }
     const initialClass = typeof filteredProps.class === "string" ? filteredProps.class : ""
     if ("class" in filteredProps) {
