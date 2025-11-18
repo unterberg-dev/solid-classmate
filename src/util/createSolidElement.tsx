@@ -1,4 +1,5 @@
 import type { Component, JSX } from "solid-js"
+import { splitProps } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import { twMerge } from "tailwind-merge"
 
@@ -79,28 +80,28 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
     const normalizedProps = enhancedProps as T & Record<string, any>
     const computedClassName = computeClassName(normalizedProps)
 
+    const normalizedRecord = normalizedProps as Record<string, any>
+    const reservedKeys = [
+      ...propsToFilter.filter((key): key is keyof T & string => typeof key === "string"),
+      "children",
+      "class",
+      "className",
+      "style",
+    ] as readonly string[]
+    const [local, forwardedSource] = splitProps(normalizedRecord, reservedKeys)
+
     const filteredProps: Record<string, any> = {}
-    let childDescriptor: PropertyDescriptor | undefined
-    for (const key in normalizedProps) {
-      if (key === "children") {
-        childDescriptor = Object.getOwnPropertyDescriptor(normalizedProps, key)
-        continue
-      }
-      if (!key.startsWith("$") && !propsToFilter.includes(key as unknown as keyof T)) {
-        filteredProps[key] = normalizedProps[key]
+    const forwarded = forwardedSource as Record<string, any>
+    for (const key in forwarded) {
+      if (!key.startsWith("$")) {
+        filteredProps[key] = forwarded[key]
       }
     }
-    if (childDescriptor) {
-      Object.defineProperty(filteredProps, "children", childDescriptor)
-    }
-    const initialClass = typeof filteredProps.class === "string" ? filteredProps.class : ""
-    if ("class" in filteredProps) {
-      // biome-ignore lint/performance/noDelete: <explanation>
-      delete filteredProps.class
-    }
+
+    const initialClass = typeof local.class === "string" ? local.class : ""
     const incomingClasses = [
       initialClass,
-      typeof filteredProps.className === "string" ? filteredProps.className : "",
+      typeof local.className === "string" ? local.className : "",
     ]
       .filter(Boolean)
       .join(" ")
@@ -109,23 +110,16 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
     const dynamicStylesSource = typeof styles === "function" ? styles(normalizedProps) : styles
     const dynamicStyles = resolveStyleDefinition(dynamicStylesSource, normalizedProps)
     const localStyleSource =
-      typeof filteredProps.style === "object" && filteredProps.style !== null
-        ? filteredProps.style
-        : undefined
-    if ("style" in filteredProps) {
-      // biome-ignore lint/performance/noDelete: <explanation>
-      delete filteredProps.style
-    }
+      typeof local.style === "object" && local.style !== null ? local.style : undefined
     const localStyles = normalizeInlineStyle(localStyleSource)
     const mergedStyles = { ...dynamicStyles, ...localStyles }
 
     const mergedClassName = twMerge(computedClassName, incomingClasses)
 
-    // biome-ignore lint/performance/noDelete: <explanation>
-    delete filteredProps.className
-
     return (
-      <Dynamic component={tag as any} {...filteredProps} class={mergedClassName} style={mergedStyles} />
+      <Dynamic component={tag as any} {...filteredProps} class={mergedClassName} style={mergedStyles}>
+        {local.children}
+      </Dynamic>
     )
   }) as ScBaseComponent<T>
 
