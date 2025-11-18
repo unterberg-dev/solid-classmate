@@ -86,7 +86,15 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
         filteredProps[key] = normalizedProps[key]
       }
     }
-    const childAccessor = normalizedProps.children
+    const getResolvedChildren = (() => {
+      let resolved: ReturnType<typeof resolveChildren> | undefined
+      return () => {
+        if (!resolved) {
+          resolved = resolveChildren(() => normalizedProps.children)
+        }
+        return resolved()
+      }
+    })()
     if ("children" in filteredProps) {
       // biome-ignore lint/performance/noDelete: <explanation>
       delete filteredProps.children
@@ -123,11 +131,9 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
     // biome-ignore lint/performance/noDelete: <explanation>
     delete filteredProps.className
 
-    const resolvedChildren = resolveChildren(() => childAccessor)
-
     return (
       <Dynamic component={tag as any} {...filteredProps} class={mergedClassName} style={mergedStyles}>
-        {resolvedChildren()}
+        {getResolvedChildren()}
       </Dynamic>
     )
   }) as ScBaseComponent<T>
