@@ -100,8 +100,6 @@ const shouldDebugHydration = () => {
   return globalFlag
 }
 
-const hydrationLogCache = new Set<string>()
-
 const logLibraryLoaded = () => {
   if (isProductionEnv || typeof console === "undefined") {
     return
@@ -138,15 +136,6 @@ const logHydrationDebug = (componentName: string, props: Record<string, any>) =>
     )
     return
   }
-  const cacheKey = `${componentName}:${context.id}:${context.count}`
-  if (hydrationLogCache.has(cacheKey)) {
-    return
-  }
-  hydrationLogCache.add(cacheKey)
-  if (hydrationLogCache.size > 500) {
-    hydrationLogCache.clear()
-  }
-
   const descriptor = Object.getOwnPropertyDescriptor(props, "children")
   const descriptorInfo = descriptor
     ? {
