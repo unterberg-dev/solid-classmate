@@ -102,6 +102,23 @@ const shouldDebugHydration = () => {
 
 const hydrationLogCache = new Set<string>()
 
+const logLibraryLoaded = () => {
+  if (isProductionEnv || typeof console === "undefined") {
+    return
+  }
+  const globalScope = typeof globalThis !== "undefined" ? (globalThis as Record<string, any>) : undefined
+  if (globalScope) {
+    if (globalScope.__SOLID_CLASSMATE_LOADED__) {
+      return
+    }
+    globalScope.__SOLID_CLASSMATE_LOADED__ = true
+  }
+  // eslint-disable-next-line no-console
+  console.info("[solid-classmate] dev build instrumentation enabled")
+}
+
+logLibraryLoaded()
+
 const logHydrationDebug = (componentName: string, props: Record<string, any>) => {
   if (!shouldDebugHydration()) {
     return
