@@ -1,5 +1,5 @@
 import type { Component, JSX } from "solid-js"
-import { splitProps } from "solid-js"
+import { sharedConfig, splitProps } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import { twMerge } from "tailwind-merge"
 
@@ -66,6 +66,82 @@ interface CreateSolidElementParams<T extends object, E extends keyof JSX.Intrins
   logicHandlers?: LogicHandler<T>[]
 }
 
+const isProductionEnv = typeof process !== "undefined" ? process.env?.NODE_ENV === "production" : false
+
+const shouldDebugHydration = () => {
+  if (typeof document === "undefined") {
+    return false
+  }
+  if (typeof process !== "undefined" && typeof process.env?.SOLID_CLASSMATE_DEBUG === "string") {
+    const flags = process.env.SOLID_CLASSMATE_DEBUG.split(",").map((flag) => flag.trim())
+    if (flags.includes("hydration")) {
+      return !isProductionEnv
+    }
+  }
+  const globalFlag = (() => {
+    if (typeof globalThis === "undefined") {
+      return false
+    }
+    const raw = (globalThis as Record<string, any>).__SOLID_CLASSMATE_DEBUG__
+    if (!raw) {
+      return false
+    }
+    if (raw === true) {
+      return true
+    }
+    if (typeof raw === "string") {
+      return raw.split(",").map((flag) => flag.trim()).includes("hydration")
+    }
+    if (typeof raw === "object" && raw !== null) {
+      return raw.hydration === true
+    }
+    return false
+  })()
+  return globalFlag
+}
+
+const hydrationLogCache = new Set<string>()
+
+const logHydrationDebug = (componentName: string, props: Record<string, any>) => {
+  if (!shouldDebugHydration()) {
+    return
+  }
+  if (!sharedConfig.context) {
+    return
+  }
+  const context = sharedConfig.context
+  const cacheKey = `${componentName}:${context.id}:${context.count}`
+  if (hydrationLogCache.has(cacheKey)) {
+    return
+  }
+  hydrationLogCache.add(cacheKey)
+  if (hydrationLogCache.size > 500) {
+    hydrationLogCache.clear()
+  }
+
+  const descriptor = Object.getOwnPropertyDescriptor(props, "children")
+  const descriptorInfo = descriptor
+    ? {
+        hasGetter: typeof descriptor.get === "function",
+        hasSetter: typeof descriptor.set === "function",
+        isValue: "value" in descriptor,
+      }
+    : { missing: true }
+
+  // eslint-disable-next-line no-console
+  console.groupCollapsed(
+    `[solid-classmate] hydrating <${componentName}> (context: ${context.id}, depth: ${context.count})`,
+  )
+  // eslint-disable-next-line no-console
+  console.log("children descriptor", descriptorInfo)
+  // eslint-disable-next-line no-console
+  console.log("prop keys", Object.keys(props))
+  // eslint-disable-next-line no-console
+  console.trace()
+  // eslint-disable-next-line no-console
+  console.groupEnd()
+}
+
 const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicElements | Component<any>>({
   tag,
   computeClassName,
@@ -115,6 +191,10 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
     const mergedStyles = { ...dynamicStyles, ...localStyles }
 
     const mergedClassName = twMerge(computedClassName, incomingClasses)
+
+    if (!isProductionEnv) {
+      logHydrationDebug(displayName, normalizedRecord)
+    }
 
     return (
       <Dynamic component={tag as any} {...filteredProps} class={mergedClassName} style={mergedStyles}>
