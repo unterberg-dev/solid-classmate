@@ -1,7 +1,7 @@
 {
   "name": "solid-classmate",
   "description": "A Solid tool to separate class name logic, create variants and manage styles.",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "bugs": {
     "url": "https://github.com/unterberg-dev/solid-classmate/issues"
   },

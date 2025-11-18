@@ -79,18 +79,18 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
     const normalizedProps = enhancedProps as T & Record<string, any>
     const computedClassName = computeClassName(normalizedProps)
 
+    const childAccessor = () => normalizedProps.children
+
     const filteredProps: Record<string, any> = {}
     for (const key in normalizedProps) {
-      if (!key.startsWith("$") && !propsToFilter.includes(key as unknown as keyof T)) {
+      if (
+        key !== "children" &&
+        !key.startsWith("$") &&
+        !propsToFilter.includes(key as unknown as keyof T)
+      ) {
         filteredProps[key] = normalizedProps[key]
       }
     }
-    const childAccessor = normalizedProps.children
-    if ("children" in filteredProps) {
-      // biome-ignore lint/performance/noDelete: <explanation>
-      delete filteredProps.children
-    }
-
     const initialClass = typeof filteredProps.class === "string" ? filteredProps.class : ""
     if ("class" in filteredProps) {
       // biome-ignore lint/performance/noDelete: <explanation>
@@ -124,7 +124,7 @@ const createSolidElement = <T extends object, E extends keyof JSX.IntrinsicEleme
 
     return (
       <Dynamic component={tag as any} {...filteredProps} class={mergedClassName} style={mergedStyles}>
-        {childAccessor}
+        {childAccessor()}
       </Dynamic>
     )
   }) as ScBaseComponent<T>
