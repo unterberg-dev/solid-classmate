@@ -113,8 +113,15 @@ const logLibraryLoaded = () => {
     }
     globalScope.__SOLID_CLASSMATE_LOADED__ = true
   }
+  const envFlag = typeof process !== "undefined" ? process.env?.SOLID_CLASSMATE_DEBUG : undefined
+  const globalFlag =
+    globalScope && "__SOLID_CLASSMATE_DEBUG__" in globalScope ? globalScope.__SOLID_CLASSMATE_DEBUG__ : undefined
   // eslint-disable-next-line no-console
-  console.info("[solid-classmate] dev build instrumentation enabled")
+  console.info(
+    `[solid-classmate] dev build instrumentation enabled (env: ${envFlag ?? "unset"}, global: ${
+      typeof globalFlag === "object" ? JSON.stringify(globalFlag) : String(globalFlag ?? "unset")
+    })`,
+  )
 }
 
 logLibraryLoaded()
