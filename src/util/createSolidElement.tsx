@@ -104,6 +104,9 @@ const logLibraryLoaded = () => {
   if (isProductionEnv || typeof console === "undefined") {
     return
   }
+  if (!shouldDebugHydration()) {
+    return
+  }
   const globalScope = typeof globalThis !== "undefined" ? (globalThis as Record<string, any>) : undefined
   if (globalScope) {
     if (globalScope.__SOLID_CLASSMATE_LOADED__) {
