@@ -130,10 +130,14 @@ const logHydrationDebug = (componentName: string, props: Record<string, any>) =>
   if (!shouldDebugHydration()) {
     return
   }
-  if (!sharedConfig.context) {
+  const context = sharedConfig.context
+  if (!context) {
+    // eslint-disable-next-line no-console
+    console.warn(
+      `[solid-classmate] hydration debug: context missing for <${componentName}>. Props keys: ${Object.keys(props).join(", ")}`,
+    )
     return
   }
-  const context = sharedConfig.context
   const cacheKey = `${componentName}:${context.id}:${context.count}`
   if (hydrationLogCache.has(cacheKey)) {
     return
