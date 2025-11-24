@@ -50,10 +50,6 @@ const SomeButton = sc.button`
 - Tested with SSR Frameworks
 - Classname merging
 
-## New Documentation online!
-
-#### [Head over to the new docs page](https://solid-classmate.dev/)
-
 ## Contents
 
 - [Features](#features)
