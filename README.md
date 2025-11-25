@@ -1,7 +1,7 @@
-# solid-classmate
+# deprecated: solid-classmate
 
-[![npm](https://img.shields.io/npm/v/solid-classmate)](https://www.npmjs.com/package/solid-classmate)
-[![npm bundle size](https://img.shields.io/bundlephobia/min/solid-classmate)](https://bundlephobia.com/result?p=solid-classmate)
+Bundle is now included and maintained in this monorepo:
+https://github.com/richard-unterberg/classmatejs/
 
 A tool for managing Solid component class names, variants and styles.
 
@@ -72,8 +72,8 @@ const SomeButton = sc.button`
 
 ## Getting started
 
-Make sure you have installed [SolidJS](https://www.solidjs.com/) (> 1.8.0) in your
-project.
+Make sure you have installed [SolidJS](https://www.solidjs.com/) (> 1.8.0) in
+your project.
 
 ```bash
 npm i solid-classmate
@@ -283,15 +283,15 @@ const WorkoutDay = ({ status }: { status: "completed" | "pending" }) => {
           pending: "border-yellow-400 bg-yellow-50",
         },
       },
-    }),
+    })
   );
 
   return <StyledDay $status={status}>Workout details</StyledDay>;
 };
 ```
 
-The helper mirrors the legacy `useClassmate` API but without dependency
-tracking since Solid props are already stable.
+The helper mirrors the legacy `useClassmate` API but without dependency tracking
+since Solid props are already stable.
 
 ### Add logic headers
 
